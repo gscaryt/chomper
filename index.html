@@ -23,28 +23,41 @@
     box-shadow:0 10px 50px #0009;}
   #app{position:absolute;inset:0;display:flex;flex-direction:column;}
 
-  /* HUD */
-  #hud{flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:6px 7px;
+  /* HUD — built to never clip on narrow phones: pills shrink, controls stay pinned. */
+  #hud{flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:6px 7px;min-width:0;
     background:linear-gradient(#1d3214,#13230d);border-bottom:3px solid #0c1707;box-shadow:0 3px 10px #0006;z-index:5;}
-  .pill{display:flex;align-items:center;gap:4px;background:#0d1a08;border:2px solid #2f4a22;
+  .pill{display:flex;align-items:center;gap:4px;background:#0d1a08;border:2px solid #2f4a22;min-width:0;flex-shrink:1;
     border-radius:13px;padding:3px 7px 3px 5px;box-shadow:inset 0 2px 0 #ffffff10,0 2px 0 #0007;}
   .pill .ic{font-size:13px;}
-  .pill .lab{font-size:8px;color:#8fb46e;letter-spacing:.2px;line-height:1;}
+  .pill .lab{font-size:8px;color:#8fb46e;letter-spacing:.2px;line-height:1;white-space:nowrap;}
   .pill .val{font-size:16px;font-weight:700;color:#f2ffe0;line-height:1;}
   .pill.target .val{color:#ffb86a;}
   .pill.score .val{color:var(--gold);}
-  #holdWrap{display:flex;flex-direction:column;align-items:center;gap:1px;}
-  #holdWrap .lab{font-size:8.5px;color:#8fb46e;}
+  #holdWrap{display:flex;flex-direction:column;align-items:center;gap:1px;flex-shrink:0;}
+  #holdWrap .lab{font-size:8.5px;color:#8fb46e;white-space:nowrap;}
   #holdDie{width:30px;height:30px;border-radius:8px;background:#0a1206;border:2px dashed #3a5a2a;
     display:flex;align-items:center;justify-content:center;overflow:hidden;}
   #holdDie .die{width:24px;height:24px;}
-  .spacer{flex:1;}
-  #mute,#quit{background:#0d1a08;border:2px solid #2f4a22;border-radius:12px;padding:5px 8px;font-size:15px;cursor:pointer;color:#cfe6b0;}
+  .spacer{flex:1 1 0;min-width:2px;}
+  #mute,#quit{flex-shrink:0;background:#0d1a08;border:2px solid #2f4a22;border-radius:12px;padding:5px 8px;font-size:15px;cursor:pointer;color:#cfe6b0;}
   /* Quit: shape-first (✕) + high luminance contrast so it reads without relying on hue
      (accessible for colour-blind players); dark warm-grey chip distinct from the green HUD. */
-  #quit{margin-left:5px;background:#34323a;border:2px solid #cfcdd6;color:#ffffff;font-weight:800;font-size:17px;line-height:1;padding:4px 9px;}
+  #quit{margin-left:4px;background:#34323a;border:2px solid #cfcdd6;color:#ffffff;font-weight:800;font-size:16px;line-height:1;padding:5px 9px;}
   #quit:hover{background:#48454f;}
   #quit:active{transform:translateY(1px);}
+  /* Compact phone layout: drop the small text labels (icons + values carry the meaning)
+     and tighten spacing so STEPS · HOLDING · CHOMPED · SCORE · TARGET + 🔊 + ✕ all fit. */
+  @media (max-width:460px){
+    #hud{gap:3px;padding:5px 5px;}
+    .pill{padding:3px 5px;gap:3px;}
+    .pill .lab,#holdWrap .lab{display:none;}
+    .pill .val{font-size:15px;}
+    #holdDie{width:26px;height:26px;} #holdDie .die{width:21px;height:21px;}
+    #mute,#quit{padding:5px 7px;font-size:15px;}
+  }
+  @media (max-width:340px){
+    .pill .ic{font-size:12px;} .pill .val{font-size:13px;}
+  }
 
   .btn{font-family:var(--font);border:none;border-radius:14px;font-weight:700;font-size:14px;
     padding:9px 13px;color:#16240f;cursor:pointer;user-select:none;white-space:nowrap;
@@ -62,7 +75,8 @@
   #sunbar .chip{font-size:10.5px;border-radius:11px;padding:3px 8px;font-weight:600;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis;background:#1a1206;border:2px solid #6b7a3a;color:#dfe6b0;}
   #sunbar .chip.combo{flex:0 0 auto;color:#ffd9a0;border-color:#b8742a;}
-  #sunbar .chip.crav{flex:1 1 0;min-width:0;text-align:center;}
+  #sunbar .chip.crav{flex:1 1 0;min-width:0;text-align:center;cursor:pointer;}
+  #sunbar .chip.crav:active{transform:translateY(1px);}
   #sunbar .chip.met{background:linear-gradient(#3a6a16,#2e5a12);border-color:#7bdc5a;color:#dfffc8;box-shadow:0 0 8px #5cc83a77;}
   /* Sun-to-cave warning, on its own row below the cravings */
   #sunwarn{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:5px;padding:3px 8px;
@@ -171,6 +185,16 @@
   .sbrow.head{background:#16240f;color:#9fc07f;font-weight:700;}
   .sbrow .res{font-size:11px;padding:1px 8px;border-radius:9px;font-weight:700;}
   .res.w{background:#1c3a16;color:#9be07a;} .res.l{background:#3a1616;color:#e08a8a;}
+  /* In-game confirmation modal (replaces the browser's native confirm dialog) */
+  .modal{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:radial-gradient(120% 90% at 50% 0%, #0a1206dd, #040603f2);animation:fade .15s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .confirmbox{width:min(360px,90vw);background:linear-gradient(#16240f,#0c1607);border:3px solid #2f4a22;
+    border-radius:20px;padding:20px 18px;text-align:center;box-shadow:0 14px 40px #000a,inset 0 2px 0 #ffffff10;}
+  .confirmbox .ct{font-size:21px;font-weight:700;color:#fff;margin-bottom:6px;}
+  .confirmbox .cm{font-size:13.5px;color:#cfe6b0;line-height:1.45;margin-bottom:16px;white-space:pre-line;}
+  .confirmbox .cbtns{display:flex;gap:10px;justify-content:center;}
+  .confirmbox .btn{flex:1;}
   .hidden{display:none!important;}
 </style>
 </head>
@@ -189,7 +213,7 @@
   </div>
 
   <div id="sunbar">
-    <span class="chip combo" id="streakInfo">🔥 ×1</span>
+    <span class="chip combo" id="streakInfo">⚡ ×1</span>
     <span class="chip crav" id="crav0">—</span>
     <span class="chip crav" id="crav1">—</span>
   </div>
@@ -270,6 +294,18 @@
   </div>
 </div>
 
+<!-- CONFIRM MODAL -->
+<div class="modal hidden" id="confirmScreen">
+  <div class="confirmbox">
+    <div class="ct" id="confirmTitle">Quit to menu?</div>
+    <div class="cm" id="confirmMsg"></div>
+    <div class="cbtns">
+      <button class="btn ghost" id="confirmNo">Keep playing</button>
+      <button class="btn alt" id="confirmYes">Quit</button>
+    </div>
+  </div>
+</div>
+
 </div></div><!-- /frame /stage -->
 
 <script>
@@ -282,7 +318,7 @@
 
 // ---------- Config ----------
 const RADIUS=5, NUM_DICE=20, START_ENERGY=5, SUN_GRACE=2;
-const FACES=[1,2,3,4,5,6];
+const FACES=[1,2,2,3,3,3,4,4,4,5,5,6];   // weighted: fewer frustrating 1s, more mid values
 const DIE_BAG=['Y','Y','Y','Y','W','W','W','W','R','R','R','R','G','G','G','G','K','K','Y','R'];
 const rollFace=()=>FACES[(Math.random()*FACES.length)|0];
 const HEX=36;
@@ -436,8 +472,8 @@ function chompAt(q,r){
   maxStreak=Math.max(maxStreak,streak);
   const bonus=Math.min(streak-1,3);
   let note='😋 Ate '+colName(die.color)+' '+die.value;
-  if(bonus>0){ energy+=bonus; momentumPts+=(streak-1); note+=' · 🔥×'+streak;
-    spawnText(p.x,p.y-HEX*0.5,'COMBO ×'+streak,'#ffd84a'); logAdd('combo','🔥 Combo ×'+streak+'  (+'+bonus+' steps)'); Sound.combo(streak); }
+  if(bonus>0){ energy+=bonus; momentumPts+=(streak-1); note+=' · ⚡×'+streak;
+    spawnText(p.x,p.y-HEX*0.5,'COMBO ×'+streak,'#ffd84a'); logAdd('combo','⚡ Combo ×'+streak+'  (+'+bonus+' steps)'); Sound.combo(streak); }
   sunAdvance();
   if(chomper.r<=sunRow){ sunburn++; energy=Math.max(0,energy-1);
     spawnText(p.x,p.y,'SUNBURN −1','#ff7a4a'); logAdd('sun','☀ Sunburn! −1 step'); Sound.sunburn(); }
@@ -516,9 +552,13 @@ function estimatePar(){
   const startDice=[]; for(const c of board.values()) if(c.die) startDice.push({q:c.q,r:c.r,color:c.die.color,value:c.die.value});
   const slotCols=belly.map(s=>({x:s.x,y:s.y,c:s.c}));
   const cr=cravings;
-  let best=-1e9;
-  for(let n=0;n<140;n++) best=Math.max(best, parPlayout(startDice,slotCols,cr));
-  return Math.round((best+20)/10)*10;   // +20 handicap, rounded to nearest 10
+  // Target = a strong, attainable run (80th percentile of greedy playouts) rather than
+  // the single luckiest run + a flat handicap, which made the bar feel unreachable —
+  // especially now that dice run 1–6. Beating this still earns a LEGENDARY rating.
+  const runs=[]; for(let n=0;n<160;n++) runs.push(parPlayout(startDice,slotCols,cr));
+  runs.sort((a,b)=>a-b);
+  const strong=runs[Math.floor(0.80*runs.length)];
+  return Math.max(20, Math.ceil((strong+15)/10)*10);   // strong run + 15 handicap, rounded up to nearest 10
 }
 function parPlayout(startDice,slotCols,cr){
   const live=new Map(); for(const d of startDice) live.set(d.q+','+d.r,{q:d.q,r:d.r,color:d.color,value:d.value});
@@ -789,7 +829,7 @@ function updateSunBar(){
   const rows=cave.r-sunRow;
   document.getElementById('sunwarn').className=(rows<=3?'danger':'');
   document.getElementById('sunInfo').innerHTML='☀ Sun <b>'+rows+'</b> rows to the Cave';
-  document.getElementById('streakInfo').textContent='🔥 ×'+Math.max(streak,1);
+  document.getElementById('streakInfo').textContent='⚡ ×'+Math.max(streak,1);
   let left=0; for(const cell of board.values()) if(cell.die) left++;
   const ctx=cravCtx(belly,havens.some(h=>h.q===chomper.q&&h.r===chomper.r),left);
   cravings.forEach((cr,i)=>{const el=document.getElementById('crav'+i),met=cr.test(ctx);
@@ -873,7 +913,9 @@ document.getElementById('bRulesGame').addEventListener('click',()=>{
   if(over)return; Sound.click(); rulesFrom='game'; $('rulesBody').innerHTML=RULES_HTML; show('rulesScreen'); });
 document.getElementById('quit').addEventListener('click',()=>{
   Sound.click();
-  if(over||confirm('Quit to the menu?\n\nThis run will be abandoned and not scored.')){ over=true; setBurn(false); show('startScreen'); }
+  if(over){ show('startScreen'); return; }
+  gameConfirm('Quit to menu?', 'This run will be abandoned and won’t be scored.', 'Quit',
+    ()=>{ over=true; setBurn(false); show('startScreen'); });
 });
 document.getElementById('mute').addEventListener('click',()=>{ Sound.on=!Sound.on; Sound.ensure(); if(Sound.on)Sound.click();
   document.getElementById('mute').textContent=Sound.on?'🔊':'🔇'; });
@@ -890,9 +932,33 @@ $('bCustomize').addEventListener('click',()=>{Sound.click();renderPreview();show
 $('bCustomizeBack').addEventListener('click',()=>{Sound.click();show('startScreen');});
 $('bScores').addEventListener('click',()=>{Sound.click();renderScores();show('scoreScreen');});
 $('bScoresBack').addEventListener('click',()=>{Sound.click();show('startScreen');});
-$('bScoresClear').addEventListener('click',()=>{Sound.click();if(confirm('Clear all saved scores?')){Store.write([]);renderScores();}});
+$('bScoresClear').addEventListener('click',()=>{Sound.click();gameConfirm('Clear scoreboard?','This permanently deletes all saved scores.','Clear',()=>{Store.write([]);renderScores();});});
 $('bAgain').addEventListener('click',()=>{Sound.click();show(null);layout();resize();newGame();});
 $('bMenu').addEventListener('click',()=>{Sound.click();show('startScreen');});
+
+// ---------- In-game confirm modal (themed replacement for window.confirm) ----------
+let confirmCb=null;
+function gameConfirm(title,msg,yesLabel,onYes){
+  $('confirmTitle').textContent=title; $('confirmMsg').textContent=msg||'';
+  $('confirmYes').textContent=yesLabel||'Confirm'; $('confirmNo').style.display='';
+  confirmCb=onYes; $('confirmScreen').classList.remove('hidden');
+}
+function gameInfo(title,msg){   // single-button informational popup (e.g. craving reminder)
+  $('confirmTitle').textContent=title; $('confirmMsg').textContent=msg||'';
+  $('confirmYes').textContent='Got it'; $('confirmNo').style.display='none';
+  confirmCb=null; $('confirmScreen').classList.remove('hidden');
+}
+function closeConfirm(){ $('confirmScreen').classList.add('hidden'); confirmCb=null; }
+$('confirmYes').addEventListener('click',()=>{Sound.click();const cb=confirmCb;closeConfirm();if(cb)cb();});
+$('confirmNo').addEventListener('click',()=>{Sound.click();closeConfirm();});
+// Tap a craving chip during play for a reminder of the objective + reward.
+['crav0','crav1'].forEach((id,i)=>$(id).addEventListener('click',()=>{
+  if(over||!cravings||!cravings[i])return; Sound.click();
+  const cr=cravings[i];
+  let left=0; for(const cell of board.values()) if(cell.die) left++;
+  const met=cr.test(cravCtx(belly,havens.some(h=>h.q===chomper.q&&h.r===chomper.r),left));
+  gameInfo('🍽 '+cr.name.split(' · ')[0], cr.name.replace(' · ','\n')+'\n\nReward: +'+cr.pts+' points'+(met?'\n\n✓ Currently met!':''));
+}));
 
 // ---------- Chomper customizer (start screen) ----------
 const prevCv=$('prevCv'), prevCtx=prevCv?prevCv.getContext('2d'):null;
@@ -960,7 +1026,7 @@ function showResults(){
   const rows=[['Dice in belly (×1, matches ×5)',s.dieMatch],['Matches (colour fits slot)',s.matches+' dice'],
     ['Trips ×10','+'+s.trips*10],['Quads ×30','+'+s.quads*30],['Haven',s.haven?'+10':'0'],['Waste (dice left on board)','−'+s.waste]];
   let html=''; for(const[a,b]of rows)html+=`<div class="scorerow"><span>${a}</span><span>${b}</span></div>`;
-  html+=`<div class="scorerow bonus"><span>🔥 Momentum (combos)</span><span>+${s.momPts}</span></div>`;
+  html+=`<div class="scorerow bonus"><span>⚡ Momentum (combos)</span><span>+${s.momPts}</span></div>`;
   for(const cr of s.cravMet)html+=`<div class="scorerow bonus"><span>🍽 ${cr.name}</span><span>+${cr.pts}</span></div>`;
   if(!s.cravMet.length)html+=`<div class="scorerow"><span class="small">No cravings satisfied</span><span>0</span></div>`;
   html+=`<div class="scorerow pen"><span>☀ Sunburn ×${s.sunburn}</span><span>−${s.sunPen}</span></div>`;
@@ -1003,7 +1069,7 @@ const RULES_HTML=`
   <li><b>Burnt dice</b> turn black (no Match) but <b>keep their value</b> — risky to fetch.</li>
   <li><b>Sunburn:</b> caught by the sun → −1 step & a few points.</li>
   <li><b>Sealed Cave:</b> sun reaches the Cave first → instant loss. Watch the clock.</li>
-  <li><b>🔥 Momentum:</b> same colour as last die → +1 step & bonus; other colour resets.</li>
+  <li><b>⚡ Momentum:</b> same colour as last die → +1 step & bonus; other colour resets.</li>
   </ul>
   <h3>🍽 Cravings <span class="small">(2 per run)</span></h3>
   <table class="cravtable">${CRAV_ROWS}</table>
